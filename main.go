@@ -32,50 +32,51 @@ func handleError(err error) {
 }
 
 func main() {
-	getRootFolder()
-	getEnvFile()
-	getVariables()
+	root = getRootFolder()
+	env = getEnvFile()
+	odjVariables = getVariables()
 	iterate()
 }
 
 // the root folder of the distribution must be tolled as first argument
-func getRootFolder() {
+func getRootFolder() string {
 	//check input parameter
 	if len(os.Args) < 2 || os.Args[1] == "" {
 		panic("Please define path to your distribution folder as first argument")
 	}
-	root = os.Args[1]
+	test := os.Args[1]
 
 	//check if root is a folder
-	if fileInfo, ok := os.Stat(root); ok != nil {
+	if fileInfo, ok := os.Stat(test); ok != nil {
 		fmt.Println("It was not possible to check the root folder of your distribution")
 		panic(ok)
 	} else if !fileInfo.IsDir() {
 		panic("The first argument must point to a directory with your distribution in it but it isn't")
 	}
-
+	return test
 }
 
 // the location of the .env.odj file must be tolled as second argument
-func getEnvFile() {
+func getEnvFile() string {
 	//check input parameter
 	if len(os.Args) < 3 || os.Args[2] == "" {
 		panic("Please define the path to your .env.odj file as second argument")
 	}
-	env = os.Args[2]
+	test := os.Args[2]
 
 	//check if env is a file
-	if fileInfo, ok := os.Stat(env); ok != nil {
+	if fileInfo, ok := os.Stat(test); ok != nil {
 		fmt.Println("It was not possible to check the .env.odj file")
 		panic(ok)
 	} else if fileInfo.IsDir() {
 		panic("The second argument must point to your .env.odj file but it isn't")
 	}
+	return test
 
 }
 
 // will read .env.odj and extract all replacements
-func getVariables() {
+func getVariables() []replacement {
 	//check if .env.odj exists
 	if fileInfo, ok := os.Stat(env); ok != nil {
 		fmt.Println("It was not possible to check the .env.odj file")
@@ -87,23 +88,27 @@ func getVariables() {
 	file, err := os.Open(env)
 	handleError(err)
 
+	ret := []replacement{}
+
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if isVar := strings.Contains(line, "ODJ_"); isVar {
 			elements := strings.Split(line, "=")
-			odjVariables = append(odjVariables, replacement{strings.TrimSpace(elements[1]), os.Getenv(strings.TrimSpace(elements[1]))})
+			ret = append(odjVariables, replacement{strings.TrimSpace(elements[1]), os.Getenv(strings.TrimSpace(elements[1]))})
 		}
 
 	}
 
-	for _, rep := range odjVariables {
+	for _, rep := range ret {
 		fmt.Printf("Will replace '%s' with '%s'\n", rep.odjVariable, rep.replacement)
 	}
 
 	handleError(scanner.Err())
 
 	defer handleError(file.Close())
+
+	return ret
 }
 
 // iterate over the file system recursively
