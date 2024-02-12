@@ -1,3 +1,3 @@
 module github.com/JJDoneAway/env_injector
 
-go 1.19
+go 1.20
