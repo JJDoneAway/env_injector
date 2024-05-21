@@ -95,11 +95,13 @@ func getVariables() []replacement {
 		line := scanner.Text()
 		if isVar := strings.Contains(line, "ODJ_"); isVar {
 			elements := strings.Split(line, "=")
-			ret = append(odjVariables, replacement{strings.TrimSpace(elements[1]), os.Getenv(strings.TrimSpace(elements[1]))})
+			nextElement := replacement{strings.TrimSpace(elements[1]), os.Getenv(strings.TrimSpace(elements[1]))}
+			ret = append(ret, nextElement)
 		}
 
 	}
 
+	fmt.Printf("Found %v variables to be replaced.\n", len(ret))
 	for _, rep := range ret {
 		fmt.Printf("Will replace '%s' with '%s'\n", rep.odjVariable, rep.replacement)
 	}
